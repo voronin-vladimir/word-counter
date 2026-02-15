@@ -3,14 +3,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace word_counter
 {
-    public static class WordCounter
+    public class WordCounter
     {
-        public static IEnumerable<KeyValuePair<string, int>> Count(string folderPath, int minWordLength)
+        public IEnumerable<KeyValuePair<string, int>> Count(string folderPath, int minWordLength)
         {
             var wordCounts = new ConcurrentDictionary<string, int>(
                 StringComparer.OrdinalIgnoreCase);
@@ -32,10 +31,7 @@ namespace word_counter
             {
                 foreach (var line in File.ReadLines(file))
                 {
-                    foreach (var word in ExtractWords(line, minWordLength))
-                    {
-                        wordCounts.AddOrUpdate(word, 1, (_, oldValue) => oldValue + 1);
-                    }
+                    ProcessLine(line, minWordLength, wordCounts);
                 }
             }
             catch (Exception ex)
@@ -44,16 +40,45 @@ namespace word_counter
             }
         }
 
-        private static IEnumerable<string> ExtractWords(string text, int minLength)
+        private static void ProcessLine(string line, int minLength,
+            ConcurrentDictionary<string, int> wordCounts)
         {
-            foreach (Match match in Regex.Matches(text, @"\b[\p{L}]+\b"))
+            int start = -1;
+
+            for (int i = 0; i < line.Length; i++)
             {
-                var word = match.Value.ToLowerInvariant();
-                if (word.Length > minLength)
+                if (char.IsLetter(line[i]))
                 {
-                    yield return word;
+                    if (start < 0)
+                        start = i;
+                }
+                else
+                {
+                    if (start >= 0)
+                    {
+                        var word = line.Substring(start, i - start);
+                        var length = i - start;
+                        CountWord(word, length, minLength, wordCounts);
+                        start = -1;
+                    }
                 }
             }
+
+            if (start >= 0)
+            {
+                var word = line.Substring(start, line.Length - start);
+                var length = line.Length - start;
+                CountWord(word, length, minLength, wordCounts);
+            }
+        }
+
+        private static void CountWord(string word, int length, int minLength,
+            ConcurrentDictionary<string, int> wordCounts)
+        {
+            if (length < minLength)
+                return;
+
+            wordCounts.AddOrUpdate(word, 1, (_, old) => old + 1);
         }
     }
 }

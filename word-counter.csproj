@@ -6,6 +6,11 @@
         <RootNamespace>word_counter</RootNamespace>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <LangVersion>10</LangVersion>
     </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+    </ItemGroup>
 
 </Project>
