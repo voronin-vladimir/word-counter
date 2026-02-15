@@ -9,7 +9,7 @@ namespace word_counter
 {
     public class WordCounter
     {
-        public IEnumerable<KeyValuePair<string, int>> Count(string folderPath, int minWordLength)
+        public static IEnumerable<KeyValuePair<string, int>> Count(string folderPath, int minWordLength)
         {
             var wordCounts = new ConcurrentDictionary<string, int>(
                 StringComparer.OrdinalIgnoreCase);
@@ -17,15 +17,20 @@ namespace word_counter
             var files = Directory.EnumerateFiles(folderPath, "*.txt",
                 SearchOption.TopDirectoryOnly);
 
-            Parallel.ForEach(files, file => { ProcessFile(file, wordCounts, minWordLength); });
+            Parallel.ForEach(files, file =>
+            {
+                var localDict = new Dictionary<string, int>();
+                ProcessFile(file, minWordLength, localDict);
+                MergeDictionaries(wordCounts, localDict);
+            });
 
             return wordCounts
                 .OrderByDescending(kvp => kvp.Value)
                 .Take(10);
         }
 
-        private static void ProcessFile(string file, ConcurrentDictionary<string, int> wordCounts,
-            int minWordLength)
+        private static void ProcessFile(string file, int minWordLength,
+            Dictionary<string, int> wordCounts)
         {
             try
             {
@@ -40,12 +45,11 @@ namespace word_counter
             }
         }
 
-        private static void ProcessLine(string line, int minLength,
-            ConcurrentDictionary<string, int> wordCounts)
+        private static void ProcessLine(string line, int minLength, Dictionary<string, int> wordCounts)
         {
-            int start = -1;
+            var start = -1;
 
-            for (int i = 0; i < line.Length; i++)
+            for (var i = 0; i < line.Length; i++)
             {
                 if (char.IsLetter(line[i]))
                 {
@@ -73,12 +77,25 @@ namespace word_counter
         }
 
         private static void CountWord(string word, int length, int minLength,
-            ConcurrentDictionary<string, int> wordCounts)
+            Dictionary<string, int> wordCounts)
         {
             if (length < minLength)
                 return;
 
-            wordCounts.AddOrUpdate(word, 1, (_, old) => old + 1);
+            wordCounts.TryGetValue(word, out var count);
+            wordCounts[word] = count + 1;
+        }
+
+        private static void MergeDictionaries(ConcurrentDictionary<string, int> result,
+            Dictionary<string, int> local)
+        {
+            foreach (var (word, count) in local)
+            {
+                result.AddOrUpdate(
+                    word,
+                    count,
+                    (_, old) => old + count);
+            }
         }
     }
 }

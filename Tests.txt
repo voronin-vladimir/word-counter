@@ -1,5 +1,4 @@
 V1
-
 | Method     | MinWordLength | Mean     | Error    | StdDev   | Median     | Gen0        | Gen1       | Gen2       | Allocated |
 |----------- |-------------- |---------:|---------:|---------:|-----------:|------------:|-----------:|-----------:|----------:|
 | Sequential | 5             | 932.7 ms | 13.47 ms | 11.25 ms |   934.0 ms | 366000.0000 | 23000.0000 | 11000.0000 |   2.84 GB |
@@ -11,3 +10,10 @@ V2 - Added line processing instead of Regex.
 |----------- |-------------- |---------:|--------:|--------:|-------:|----------:|
 | Sequential | 5             | 183.1 us | 3.57 us | 4.76 us | 3.1738 |  25.36 KB |
 | Sequential | 10            | 182.1 us | 1.67 us | 1.48 us | 3.1738 |  24.89 KB |
+
+
+V3 - Added local dictionaries for each file
+| Method     | MinWordLength | Mean     | Error   | StdDev  | Gen0   | Allocated |
+|----------- |-------------- |---------:|--------:|--------:|-------:|----------:|
+| Sequential | 5             | 185.7 us | 3.56 us | 3.66 us | 2.9297 |  24.66 KB |
+| Sequential | 10            | 180.4 us | 2.76 us | 2.45 us | 3.1738 |  24.76 KB |
